@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>क्रिप्टो एक्सचेंज - लॉगिन और साइनअप</title>
+    
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <style>
+        /* CSS: थोड़ा सा स्टाइलिंग ताकि यह साफ दिखे */
+        body { font-family: Arial, sans-serif; margin: 20px; background-color: #f4f4f4; }
+        .container { max-width: 400px; margin: 0 auto; padding: 20px; background: white; border-radius: 8px; box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); }
+        h1 { text-align: center; color: #007bff; }
+        .form-section { border: 1px solid #ddd; padding: 15px; margin-bottom: 20px; border-radius: 5px; }
+        input[type="text"], input[type="password"] { width: 95%; padding: 10px; margin: 8px 0; border: 1px solid #ccc; border-radius: 4px; }
+        button { background-color: #28a745; color: white; padding: 10px 15px; margin: 5px 0; border: none; border-radius: 4px; cursor: pointer; width: 100%; }
+        button:hover { opacity: 0.9; }
+        .button-group button { background-color: #007bff; width: 48%; }
+        .button-group button:last-child { background-color: #6c757d; }
+        .message { margin-top: 15px; padding: 10px; border-radius: 4px; text-align: center; }
+        .success { background-color: #d4edda; color: #155724; }
+        .error { background-color: #f8d7da; color: #721c24; }
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>🔑 क्रिप्टो एक्सचेंज</h1>
+        
+        <div id="login-section" class="form-section">
+            <h2>लॉगिन</h2>
+            <input type="text" id="login-number" placeholder="फ़ोन नंबर" required><br>
+            <input type="password" id="login-password" placeholder="पासवर्ड" required><br>
+            
+            <button onclick="handleLogin()">लॉगिन करें</button>
+            
+            <div class="button-group" style="margin-top: 10px;">
+                <button onclick="showSection('signup-section')" style="background-color: #17a2b8;">अकाउंट बनाएँ</button>
+                <button onclick="showSection('forgot-section')" style="background-color: #ffc107;">पासवर्ड भूल गए</button>
+            </div>
+            
+            <p id="login-message" class="message"></p>
+        </div>
+
+        <div id="signup-section" class="form-section hidden">
+            <h2>नया अकाउंट बनाएँ</h2>
+            <input type="text" id="signup-name" placeholder="पूरा नाम" required><br>
+            <input type="text" id="signup-number" placeholder="फ़ोन नंबर" required><br>
+            <input type="password" id="signup-password" placeholder="पासवर्ड" required><br>
+            
+            <button onclick="handleSignup()" style="background-color: #28a745;">अकाउंट बनाएँ</button>
+            <button onclick="showSection('login-section')" style="background-color: #6c757d;">लॉगिन पर वापस जाएँ</button>
+            
+            <p id="signup-message" class="message"></p>
+        </div>
+
+        <div id="forgot-section" class="form-section hidden">
+            <h2>पासवर्ड रीसेट</h2>
+            <input type="text" id="forgot-number" placeholder="अपना फ़ोन नंबर दर्ज करें" required><br>
+            
+            <button onclick="handleForgotPassword()" style="background-color: #ffc107;">रीसेट कोड प्राप्त करें</button>
+            <button onclick="showSection('login-section')" style="background-color: #6c757d;">लॉगिन पर वापस जाएँ</button>
+            
+            <p id="forgot-message" class="message"></p>
+        </div>
+    </div>
+    
+    
+    <script>
+        // --- Supabase Credentials (आपके द्वारा प्रदान किए गए) ---
+        const SUPABASE_URL = 'https://lklzdnayllonhvwypeie.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxrbHpkbmF5bGxvbmh2d3lwZWllIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM5MDg5NzAsImV4cCI6MjA3OTQ4NDk3MH0.ZnNnPJE_8UUxkizxazXe-bo0m-DwGW57s9z5N4ROv3A';
+
+        // Supabase Client को इनिशियलाइज़ करें
+        const { createClient } = supabase;
+        const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        // --- UI Helper Function ---
+        function showSection(sectionId) {
+            document.querySelectorAll('.form-section').forEach(section => {
+                section.classList.add('hidden');
+            });
+            document.getElementById(sectionId).classList.remove('hidden');
+            
+            // संदेशों को साफ करें
+            document.querySelectorAll('.message').forEach(msg => {
+                msg.textContent = '';
+                msg.classList.remove('success', 'error');
+            });
+        }
+        
+        // --- HELPER FUNCTIONS ---
+        // 6-अंकीय सत्यापन कोड जेनरेट करने के लिए
+        function generateVerificationCode() {
+            return Math.floor(100000 + Math.random() * 900000).toString();
+        }
+
+        // पासवर्ड हैशिंग (उत्पादन के लिए इसे सर्वर-साइड Edge Function पर ले जाएं)
+        async function hashPassword(password) {
+            // वर्तमान में, सिर्फ Plain Text रिटर्न कर रहे हैं, ताकि हम Login/Signup जांच सकें।
+            return password; 
+        }
+
+        // --- 1. SIGNUP LOGIC ---
+        async function handleSignup() {
+            const name = document.getElementById('signup-name').value;
+            const number = document.getElementById('signup-number').value;
+            const password = document.getElementById('signup-password').value;
+            const messageElement = document.getElementById('signup-message');
+
+            if (!name || !number || !password) {
+                messageElement.textContent = "कृपया सभी फ़ील्ड भरें।";
+                messageElement.classList.add('error');
+                return;
+            }
+
+            messageElement.textContent = "अकाउंट बना रहा है, कृपया प्रतीक्षा करें...";
+            messageElement.classList.remove('error', 'success');
+            
+            try {
+                const hashedPassword = await hashPassword(password);
+                
+                // 1. 'users' टेबल में नया यूजर रिकॉर्ड डालें
+                const { data: newUser, error: userError } = await supabaseClient
+                    .from('users')
+                    .insert([
+                        { 
+                            name: name, 
+                            phone_number: number, 
+                            hashed_password: hashedPassword,
+                            is_verified: false 
+                        }
+                    ])
+                    .select('id') 
+                    .single();
+
+                if (userError) {
+                    if (userError.code === '23505') { 
+                        messageElement.textContent = "यह फ़ोन नंबर पहले से पंजीकृत है।";
+                    } else {
+                        messageElement.textContent = `अकाउंट बनाने में त्रुटि: ${userError.message}`;
+                    }
+                    messageElement.classList.add('error');
+                    return;
+                }
+
+                const userId = newUser.id;
+                const verificationCode = generateVerificationCode();
+                
+                // 2. 'verification_codes' टेबल में सत्यापन कोड डालें (5 मिनट की समाप्ति)
+                const now = new Date();
+                const expiresAt = new Date(now.getTime() + 5 * 60000).toISOString(); 
+                
+                const { error: codeError } = await supabaseClient
+                    .from('verification_codes')
+                    .insert([
+                        {
+                            user_id: userId,
+                            code: verificationCode,
+                            type: 'signup',
+                            expires_at: expiresAt
+                        }
+                    ]);
+
+                if (codeError) {
+                    messageElement.textContent = "सत्यापन कोड उत्पन्न करने में त्रुटि।";
+                    messageElement.classList.add('error');
+                    return;
+                }
+
+                // 3. सफलता संदेश और सत्यापन जानकारी दिखाएं
+                const telegramBotLink = "YOUR_TELEGRAM_BOT_LINK_HERE"; // **यह लिंक बदलना है**
+                
+                messageElement.innerHTML = `
+                    ✅ **सफलतापूर्वक पंजीकृत!**<br>
+                    आपका सत्यापन कोड है: <strong>${verificationCode}</strong><br>
+                    कृपया <a href="${telegramBotLink}" target="_blank">Telegram Bot पर जाएँ</a> और इस कोड को पेस्ट करके अकाउंट सत्यापित करें।
+                `;
+                messageElement.classList.add('success');
+                
+            } catch (err) {
+                console.error("General Signup Error:", err);
+                messageElement.textContent = "एक अप्रत्याशित त्रुटि हुई।";
+                messageElement.classList.add('error');
+            }
+        }
+        
+        // --- 2. LOGIN LOGIC ---
+        async function handleLogin() {
+            const number = document.getElementById('login-number').value;
+            const password = document.getElementById('login-password').value;
+            const messageElement = document.getElementById('login-message');
+
+            if (!number || !password) {
+                messageElement.textContent = "कृपया फ़ोन नंबर और पासवर्ड दर्ज करें।";
+                messageElement.classList.add('error');
+                return;
+            }
+
+            messageElement.textContent = "लॉग इन कर रहा है, कृपया प्रतीक्षा करें...";
+            messageElement.classList.remove('error', 'success');
+
+            try {
+                // 1. 'users' टेबल से यूजर को Fetch करें
+                const { data: userData, error: fetchError } = await supabaseClient
+                    .from('users')
+                    .select('id, hashed_password, is_verified')
+                    .eq('phone_number', number)
+                    .single();
+
+                if (fetchError || !userData) {
+                    messageElement.textContent = "गलत फ़ोन नंबर या पासवर्ड।";
+                    messageElement.classList.add('error');
+                    return;
+                }
+
+                // 2. पासवर्ड की तुलना करें (उत्पादन में hashed password की तुलना करें!)
+                if (userData.hashed_password !== password) {
+                    messageElement.textContent = "गलत फ़ोन नंबर या पासवर्ड।";
+                    messageElement.classList.add('error');
+                    return;
+                }
+
+                // 3. 'is_verified' स्थिति की जांच करें
+                if (!userData.is_verified) {
+                    messageElement.textContent = "अकाउंट सत्यापित नहीं है। कृपया पहले अकाउंट सत्यापित करें।";
+                    messageElement.classList.add('error');
+                    return;
+                }
+
+                // 4. सफलता: लॉगिन सफल
+                messageElement.innerHTML = `✅ **लॉगिन सफल!** डैशबोर्ड पर रीडायरेक्ट कर रहा है...`;
+                messageElement.classList.add('success');
+                
+                // TODO: यहाँ यूजर को एक्सचेंज डैशबोर्ड (e.g., dashboard.html) पर रीडायरेक्ट करें
+                // window.location.href = 'dashboard.html'; 
+
+            } catch (err) {
+                console.error("Login Error:", err);
+                messageElement.textContent = "लॉगिन करते समय एक अप्रत्याशित त्रुटि हुई।";
+                messageElement.classList.add('error');
+            }
+        }
+        
+        // --- 3. FORGOT PASSWORD LOGIC ---
+        async function handleForgotPassword() {
+            const number = document.getElementById('forgot-number').value;
+            const messageElement = document.getElementById('forgot-message');
+            
+            if (!number) {
+                messageElement.textContent = "कृपया फ़ोन नंबर दर्ज करें।";
+                messageElement.classList.add('error');
+                return;
+            }
+
+            messageElement.textContent = "रीसेट कोड भेज रहा है...";
+            messageElement.classList.remove('error', 'success');
+
+            try {
+                // 1. यूजर को Fetch करें
+                const { data: userData, error: fetchError } = await supabaseClient
+                    .from('users')
+                    .select('id')
+                    .eq('phone_number', number)
+                    .single();
+
+                if (fetchError || !userData) {
+                    messageElement.textContent = "यह फ़ोन नंबर पंजीकृत नहीं है।";
+                    messageElement.classList.add('error');
+                    return;
+                }
+                
+                const userId = userData.id;
+                const resetCode = generateVerificationCode();
+                
+                // 2. 'verification_codes' टेबल में नया 'forgot' कोड डालें
+                const now = new Date();
+                const expiresAt = new Date(now.getTime() + 5 * 60000).toISOString(); 
+
+                const { error: codeError } = await supabaseClient
+                    .from('verification_codes')
+                    .insert([
+                        {
+                            user_id: userId,
+                            code: resetCode,
+                            type: 'forgot',
+                            expires_at: expiresAt
+                        }
+                    ]);
+
+                if (codeError) {
+                    messageElement.textContent = "रीसेट कोड उत्पन्न करने में त्रुटि।";
+                    messageElement.classList.add('error');
+                    return;
+                }
+                
+                // 3. सफलता संदेश दिखाएं
+                const telegramBotLink = "YOUR_TELEGRAM_BOT_LINK_HERE"; // **यह लिंक बदलना है**
+
+                messageElement.innerHTML = `
+                    ✅ **रीसेट कोड भेजा गया!**<br>
+                    आपका रीसेट कोड है: <strong>${resetCode}</strong><br>
+                    कृपया <a href="${telegramBotLink}" target="_blank">Telegram Bot पर जाएँ</a> और इस कोड को पेस्ट करें। बॉट आपको नया पासवर्ड सेट करने देगा।
+                `;
+                messageElement.classList.add('success');
+                
+            } catch (err) {
+                console.error("Forgot Password Error:", err);
+                messageElement.textContent = "एक अप्रत्याशित त्रुटि हुई।";
+                messageElement.classList.add('error');
+            }
+        }
+
+
+        // पेज लोड होने पर केवल Login सेक्शन दिखाएं
+        window.onload = () => showSection('login-section');
+
+    </script>
+</body>
+</html>
