@@ -2,321 +2,366 @@
 <html lang="hi">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>क्रिप्टो एक्सचेंज - लॉगिन और साइनअप</title>
-    
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>AvicnKnov Exchange | 2026 Launch</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        /* CSS: थोड़ा सा स्टाइलिंग ताकि यह साफ दिखे */
-        body { font-family: Arial, sans-serif; margin: 20px; background-color: #f4f4f4; }
-        .container { max-width: 400px; margin: 0 auto; padding: 20px; background: white; border-radius: 8px; box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); }
-        h1 { text-align: center; color: #007bff; }
-        .form-section { border: 1px solid #ddd; padding: 15px; margin-bottom: 20px; border-radius: 5px; }
-        input[type="text"], input[type="password"] { width: 95%; padding: 10px; margin: 8px 0; border: 1px solid #ccc; border-radius: 4px; }
-        button { background-color: #28a745; color: white; padding: 10px 15px; margin: 5px 0; border: none; border-radius: 4px; cursor: pointer; width: 100%; }
-        button:hover { opacity: 0.9; }
-        .button-group button { background-color: #007bff; width: 48%; }
-        .button-group button:last-child { background-color: #6c757d; }
-        .message { margin-top: 15px; padding: 10px; border-radius: 4px; text-align: center; }
-        .success { background-color: #d4edda; color: #155724; }
-        .error { background-color: #f8d7da; color: #721c24; }
-        .hidden { display: none; }
+        :root {
+            --gold: #FFD700;
+            --premium-blue: #000428;
+            --snow: #ffffff;
+        }
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(to bottom, #000428, #004e92);
+        }
+
+        /* --- Realistic Mountain Background --- */
+        .background-scene {
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            background: linear-gradient(transparent 70%, rgba(255,255,255,0.8) 100%);
+        }
+
+        .mountain {
+            position: absolute;
+            bottom: 0;
+            width: 0;
+            height: 0;
+            border-left: 150px solid transparent;
+            border-right: 150px solid transparent;
+            border-bottom: 200px solid rgba(255, 255, 255, 0.2);
+            filter: blur(2px);
+        }
+        .mt-1 { left: -50px; border-bottom-height: 300px; opacity: 0.5; }
+        .mt-2 { right: -50px; border-bottom: 250px solid rgba(255, 255, 255, 0.3); }
+
+        /* --- Wind-Blown Snow Effect --- */
+        #snow-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        /* --- Main UI Card --- */
+        .main-container {
+            position: relative;
+            z-index: 10;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.07);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 30px;
+            padding: 30px 20px;
+            width: 100%;
+            max-width: 350px;
+            text-align: center;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+            animation: floatCard 4s ease-in-out infinite;
+        }
+
+        @keyframes floatCard {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        h1 {
+            font-size: 2.2rem;
+            color: var(--gold);
+            margin: 0;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            text-shadow: 0 0 15px rgba(255, 215, 0, 0.6);
+        }
+
+        .sub-text {
+            color: #d1d1d1;
+            font-size: 0.85rem;
+            margin: 15px 0;
+            line-height: 1.6;
+        }
+
+        /* --- Timer Styling --- */
+        .timer-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            margin: 25px 0;
+        }
+
+        .t-unit {
+            background: rgba(0, 0, 0, 0.5);
+            padding: 10px 5px;
+            border-radius: 15px;
+            border-bottom: 3px solid var(--gold);
+        }
+
+        .t-unit span {
+            display: block;
+            font-size: 1.4rem;
+            font-weight: 800;
+            color: white;
+        }
+
+        .t-label {
+            font-size: 0.6rem;
+            color: var(--gold);
+            text-transform: uppercase;
+        }
+
+        /* --- Snowy Launch Button --- */
+        .btn-launch {
+            width: 100%;
+            padding: 18px;
+            border: none;
+            border-radius: 50px;
+            background: linear-gradient(45deg, #00c6ff, #0072ff);
+            color: white;
+            font-size: 1.2rem;
+            font-weight: bold;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 10px 20px rgba(0, 114, 255, 0.3);
+            transition: 0.3s;
+        }
+
+        .btn-launch::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            pointer-events: none;
+        }
+
+        /* --- New Year Celebration --- */
+        #celebration {
+            display: none;
+            position: fixed;
+            top: 20%;
+            width: 100%;
+            text-align: center;
+            z-index: 100;
+            animation: flyingText 5s linear infinite;
+        }
+
+        @keyframes flyingText {
+            0% { transform: translateX(-110%) rotate(-5deg); }
+            100% { transform: translateX(110%) rotate(5deg); }
+        }
+
+        .ny-text {
+            font-size: 3rem;
+            background: linear-gradient(to right, #fff, #ffd700, #fff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: 900;
+            filter: drop-shadow(0 0 10px gold);
+        }
+
+        /* --- Socials --- */
+        .social-bar {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 25px;
+        }
+
+        .social-bar a {
+            color: white;
+            font-size: 1.5rem;
+            opacity: 0.7;
+            transition: 0.3s;
+        }
+
+        .social-bar a:hover { opacity: 1; color: var(--gold); }
+
+        /* --- Siren --- */
+        #siren-box {
+            position: fixed;
+            top: 15px;
+            right: 15px;
+            width: 50px;
+            height: 50px;
+            background: radial-gradient(circle, red, #500);
+            border-radius: 50%;
+            display: none;
+            animation: sirenFlash 0.3s infinite alternate;
+            z-index: 1000;
+            border: 2px solid white;
+        }
+
+        @keyframes sirenFlash {
+            from { opacity: 1; transform: scale(1); box-shadow: 0 0 30px red; }
+            to { opacity: 0.4; transform: scale(0.9); box-shadow: 0 0 5px red; }
+        }
     </style>
 </head>
 <body>
 
-    <div class="container">
-        <h1>🔑 क्रिप्टो एक्सचेंज</h1>
-        
-        <div id="login-section" class="form-section">
-            <h2>लॉगिन</h2>
-            <input type="text" id="login-number" placeholder="फ़ोन नंबर" required><br>
-            <input type="password" id="login-password" placeholder="पासवर्ड" required><br>
-            
-            <button onclick="handleLogin()">लॉगिन करें</button>
-            
-            <div class="button-group" style="margin-top: 10px;">
-                <button onclick="showSection('signup-section')" style="background-color: #17a2b8;">अकाउंट बनाएँ</button>
-                <button onclick="showSection('forgot-section')" style="background-color: #ffc107;">पासवर्ड भूल गए</button>
+    <div id="siren-box"></div>
+
+    <div class="background-scene">
+        <div class="mountain mt-1"></div>
+        <div class="mountain mt-2"></div>
+    </div>
+
+    <canvas id="snow-canvas"></canvas>
+
+    <div id="celebration">
+        <div class="ny-text">HAPPY NEW YEAR 2026</div>
+    </div>
+
+    <div class="main-container">
+        <div class="glass-card">
+            <h1>AvicnKnov</h1>
+            <p class="sub-text">
+                Purely Secure. Powered by AI Agents.<br>
+                Hamara exchange sabse naya aur fast hone wala hai. 
+            </p>
+
+            <div class="timer-grid">
+                <div class="t-unit"><span id="days">00</span><div class="t-label">Days</div></div>
+                <div class="t-unit"><span id="hours">00</span><div class="t-label">Hrs</div></div>
+                <div class="t-unit"><span id="mins">00</span><div class="t-label">Min</div></div>
+                <div class="t-unit"><span id="secs">00</span><div class="t-label">Sec</div></div>
             </div>
-            
-            <p id="login-message" class="message"></p>
-        </div>
 
-        <div id="signup-section" class="form-section hidden">
-            <h2>नया अकाउंट बनाएँ</h2>
-            <input type="text" id="signup-name" placeholder="पूरा नाम" required><br>
-            <input type="text" id="signup-number" placeholder="फ़ोन नंबर" required><br>
-            <input type="password" id="signup-password" placeholder="पासवर्ड" required><br>
-            
-            <button onclick="handleSignup()" style="background-color: #28a745;">अकाउंट बनाएँ</button>
-            <button onclick="showSection('login-section')" style="background-color: #6c757d;">लॉगिन पर वापस जाएँ</button>
-            
-            <p id="signup-message" class="message"></p>
-        </div>
+            <button class="btn-launch" onclick="launchApp()">AvicnKnov EX</button>
 
-        <div id="forgot-section" class="form-section hidden">
-            <h2>पासवर्ड रीसेट</h2>
-            <input type="text" id="forgot-number" placeholder="अपना फ़ोन नंबर दर्ज करें" required><br>
-            
-            <button onclick="handleForgotPassword()" style="background-color: #ffc107;">रीसेट कोड प्राप्त करें</button>
-            <button onclick="showSection('login-section')" style="background-color: #6c757d;">लॉगिन पर वापस जाएँ</button>
-            
-            <p id="forgot-message" class="message"></p>
+            <div class="social-bar">
+                <a href="https://youtube.com/@avicnknov"><i class="fab fa-youtube"></i></a>
+                <a href="https://t.me/AvicnKnov"><i class="fab fa-telegram"></i></a>
+                <a href="https://x.com/AvicnKnov"><i class="fab fa-twitter"></i></a>
+                <a href="https://instagram.com/avicnknov"><i class="fab fa-instagram"></i></a>
+                <a href="https://facebook.com/share/1G8YRZhZ6M/"><i class="fab fa-facebook"></i></a>
+            </div>
         </div>
     </div>
-    
-    
+
+    <audio id="tick-sound" src="https://www.soundjay.com/buttons/sounds/button-50.mp3"></audio>
+    <audio id="siren-sound" loop src="https://www.soundjay.com/mechanical/sounds/siren-1.mp3"></audio>
+
     <script>
-        // --- Supabase Credentials (आपके द्वारा प्रदान किए गए) ---
-        const SUPABASE_URL = 'https://lklzdnayllonhvwypeie.supabase.co';
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxrbHpkbmF5bGxvbmh2d3lwZWllIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM5MDg5NzAsImV4cCI6MjA3OTQ4NDk3MH0.ZnNnPJE_8UUxkizxazXe-bo0m-DwGW57s9z5N4ROv3A';
+        // Set your Target Date
+        const targetDate = new Date("Jan 1, 2026 00:00:00").getTime();
+        const exchangeUrl = "https://cb23bff2-776f-47ca-9d40-233de8c02a89-00-359h0gog3zbrz.pike.replit.dev/";
 
-        // Supabase Client को इनिशियलाइज़ करें
-        const { createClient } = supabase;
-        const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        function updateClock() {
+            const now = new Date().getTime();
+            const diff = targetDate - now;
 
-        // --- UI Helper Function ---
-        function showSection(sectionId) {
-            document.querySelectorAll('.form-section').forEach(section => {
-                section.classList.add('hidden');
-            });
-            document.getElementById(sectionId).classList.remove('hidden');
-            
-            // संदेशों को साफ करें
-            document.querySelectorAll('.message').forEach(msg => {
-                msg.textContent = '';
-                msg.classList.remove('success', 'error');
-            });
-        }
-        
-        // --- HELPER FUNCTIONS ---
-        // 6-अंकीय सत्यापन कोड जेनरेट करने के लिए
-        function generateVerificationCode() {
-            return Math.floor(100000 + Math.random() * 900000).toString();
-        }
-
-        // पासवर्ड हैशिंग (उत्पादन के लिए इसे सर्वर-साइड Edge Function पर ले जाएं)
-        async function hashPassword(password) {
-            // वर्तमान में, सिर्फ Plain Text रिटर्न कर रहे हैं, ताकि हम Login/Signup जांच सकें।
-            return password; 
-        }
-
-        // --- 1. SIGNUP LOGIC ---
-        async function handleSignup() {
-            const name = document.getElementById('signup-name').value;
-            const number = document.getElementById('signup-number').value;
-            const password = document.getElementById('signup-password').value;
-            const messageElement = document.getElementById('signup-message');
-
-            if (!name || !number || !password) {
-                messageElement.textContent = "कृपया सभी फ़ील्ड भरें।";
-                messageElement.classList.add('error');
+            if (diff <= 0) {
+                document.getElementById("celebration").style.display = "block";
                 return;
             }
 
-            messageElement.textContent = "अकाउंट बना रहा है, कृपया प्रतीक्षा करें...";
-            messageElement.classList.remove('error', 'success');
-            
-            try {
-                const hashedPassword = await hashPassword(password);
-                
-                // 1. 'users' टेबल में नया यूजर रिकॉर्ड डालें
-                const { data: newUser, error: userError } = await supabaseClient
-                    .from('users')
-                    .insert([
-                        { 
-                            name: name, 
-                            phone_number: number, 
-                            hashed_password: hashedPassword,
-                            is_verified: false 
-                        }
-                    ])
-                    .select('id') 
-                    .single();
+            const d = Math.floor(diff / (1000 * 60 * 60 * 24));
+            const h = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+            const s = Math.floor((diff % (1000 * 60)) / 1000);
 
-                if (userError) {
-                    if (userError.code === '23505') { 
-                        messageElement.textContent = "यह फ़ोन नंबर पहले से पंजीकृत है।";
-                    } else {
-                        messageElement.textContent = `अकाउंट बनाने में त्रुटि: ${userError.message}`;
-                    }
-                    messageElement.classList.add('error');
-                    return;
-                }
+            document.getElementById("days").innerText = d;
+            document.getElementById("hours").innerText = h;
+            document.getElementById("mins").innerText = m;
+            document.getElementById("secs").innerText = s;
 
-                const userId = newUser.id;
-                const verificationCode = generateVerificationCode();
-                
-                // 2. 'verification_codes' टेबल में सत्यापन कोड डालें (5 मिनट की समाप्ति)
-                const now = new Date();
-                const expiresAt = new Date(now.getTime() + 5 * 60000).toISOString(); 
-                
-                const { error: codeError } = await supabaseClient
-                    .from('verification_codes')
-                    .insert([
-                        {
-                            user_id: userId,
-                            code: verificationCode,
-                            type: 'signup',
-                            expires_at: expiresAt
-                        }
-                    ]);
+            // Tick Sound
+            document.getElementById("tick-sound").play().catch(() => {});
 
-                if (codeError) {
-                    messageElement.textContent = "सत्यापन कोड उत्पन्न करने में त्रुटि।";
-                    messageElement.classList.add('error');
-                    return;
-                }
-
-                // 3. सफलता संदेश और सत्यापन जानकारी दिखाएं
-                const telegramBotLink = "YOUR_TELEGRAM_BOT_LINK_HERE"; // **यह लिंक बदलना है**
-                
-                messageElement.innerHTML = `
-                    ✅ **सफलतापूर्वक पंजीकृत!**<br>
-                    आपका सत्यापन कोड है: <strong>${verificationCode}</strong><br>
-                    कृपया <a href="${telegramBotLink}" target="_blank">Telegram Bot पर जाएँ</a> और इस कोड को पेस्ट करके अकाउंट सत्यापित करें।
-                `;
-                messageElement.classList.add('success');
-                
-            } catch (err) {
-                console.error("General Signup Error:", err);
-                messageElement.textContent = "एक अप्रत्याशित त्रुटि हुई।";
-                messageElement.classList.add('error');
-            }
-        }
-        
-        // --- 2. LOGIN LOGIC ---
-        async function handleLogin() {
-            const number = document.getElementById('login-number').value;
-            const password = document.getElementById('login-password').value;
-            const messageElement = document.getElementById('login-message');
-
-            if (!number || !password) {
-                messageElement.textContent = "कृपया फ़ोन नंबर और पासवर्ड दर्ज करें।";
-                messageElement.classList.add('error');
-                return;
-            }
-
-            messageElement.textContent = "लॉग इन कर रहा है, कृपया प्रतीक्षा करें...";
-            messageElement.classList.remove('error', 'success');
-
-            try {
-                // 1. 'users' टेबल से यूजर को Fetch करें
-                const { data: userData, error: fetchError } = await supabaseClient
-                    .from('users')
-                    .select('id, hashed_password, is_verified')
-                    .eq('phone_number', number)
-                    .single();
-
-                if (fetchError || !userData) {
-                    messageElement.textContent = "गलत फ़ोन नंबर या पासवर्ड।";
-                    messageElement.classList.add('error');
-                    return;
-                }
-
-                // 2. पासवर्ड की तुलना करें (उत्पादन में hashed password की तुलना करें!)
-                if (userData.hashed_password !== password) {
-                    messageElement.textContent = "गलत फ़ोन नंबर या पासवर्ड।";
-                    messageElement.classList.add('error');
-                    return;
-                }
-
-                // 3. 'is_verified' स्थिति की जांच करें
-                if (!userData.is_verified) {
-                    messageElement.textContent = "अकाउंट सत्यापित नहीं है। कृपया पहले अकाउंट सत्यापित करें।";
-                    messageElement.classList.add('error');
-                    return;
-                }
-
-                // 4. सफलता: लॉगिन सफल
-                messageElement.innerHTML = `✅ **लॉगिन सफल!** डैशबोर्ड पर रीडायरेक्ट कर रहा है...`;
-                messageElement.classList.add('success');
-                
-                // TODO: यहाँ यूजर को एक्सचेंज डैशबोर्ड (e.g., dashboard.html) पर रीडायरेक्ट करें
-                // window.location.href = 'dashboard.html'; 
-
-            } catch (err) {
-                console.error("Login Error:", err);
-                messageElement.textContent = "लॉगिन करते समय एक अप्रत्याशित त्रुटि हुई।";
-                messageElement.classList.add('error');
-            }
-        }
-        
-        // --- 3. FORGOT PASSWORD LOGIC ---
-        async function handleForgotPassword() {
-            const number = document.getElementById('forgot-number').value;
-            const messageElement = document.getElementById('forgot-message');
-            
-            if (!number) {
-                messageElement.textContent = "कृपया फ़ोन नंबर दर्ज करें।";
-                messageElement.classList.add('error');
-                return;
-            }
-
-            messageElement.textContent = "रीसेट कोड भेज रहा है...";
-            messageElement.classList.remove('error', 'success');
-
-            try {
-                // 1. यूजर को Fetch करें
-                const { data: userData, error: fetchError } = await supabaseClient
-                    .from('users')
-                    .select('id')
-                    .eq('phone_number', number)
-                    .single();
-
-                if (fetchError || !userData) {
-                    messageElement.textContent = "यह फ़ोन नंबर पंजीकृत नहीं है।";
-                    messageElement.classList.add('error');
-                    return;
-                }
-                
-                const userId = userData.id;
-                const resetCode = generateVerificationCode();
-                
-                // 2. 'verification_codes' टेबल में नया 'forgot' कोड डालें
-                const now = new Date();
-                const expiresAt = new Date(now.getTime() + 5 * 60000).toISOString(); 
-
-                const { error: codeError } = await supabaseClient
-                    .from('verification_codes')
-                    .insert([
-                        {
-                            user_id: userId,
-                            code: resetCode,
-                            type: 'forgot',
-                            expires_at: expiresAt
-                        }
-                    ]);
-
-                if (codeError) {
-                    messageElement.textContent = "रीसेट कोड उत्पन्न करने में त्रुटि।";
-                    messageElement.classList.add('error');
-                    return;
-                }
-                
-                // 3. सफलता संदेश दिखाएं
-                const telegramBotLink = "YOUR_TELEGRAM_BOT_LINK_HERE"; // **यह लिंक बदलना है**
-
-                messageElement.innerHTML = `
-                    ✅ **रीसेट कोड भेजा गया!**<br>
-                    आपका रीसेट कोड है: <strong>${resetCode}</strong><br>
-                    कृपया <a href="${telegramBotLink}" target="_blank">Telegram Bot पर जाएँ</a> और इस कोड को पेस्ट करें। बॉट आपको नया पासवर्ड सेट करने देगा।
-                `;
-                messageElement.classList.add('success');
-                
-            } catch (err) {
-                console.error("Forgot Password Error:", err);
-                messageElement.textContent = "एक अप्रत्याशित त्रुटि हुई।";
-                messageElement.classList.add('error');
+            // Siren Logic (Last 72 Hours)
+            if (diff < 259200000) {
+                document.getElementById("siren-box").style.display = "block";
+                document.getElementById("siren-sound").play().catch(() => {});
             }
         }
 
+        setInterval(updateClock, 1000);
 
-        // पेज लोड होने पर केवल Login सेक्शन दिखाएं
-        window.onload = () => showSection('login-section');
+        function launchApp() {
+            if (new Date().getTime() < targetDate) {
+                alert("Launch time ka intezar karein! AvicnKnov jald aa raha hai.");
+            } else {
+                window.location.href = exchangeUrl;
+            }
+        }
 
+        // --- Wind Snow Animation ---
+        const canvas = document.getElementById('snow-canvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        let flakes = [];
+        function createFlakes() {
+            for (let i = 0; i < 200; i++) {
+                flakes.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height,
+                    r: Math.random() * 3 + 1,
+                    v: Math.random() * 2 + 1, // Velocity
+                    w: Math.random() * 2 - 1 // Wind sway
+                });
+            }
+        }
+
+        function drawFlakes() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = "white";
+            ctx.beginPath();
+            for (let f of flakes) {
+                ctx.moveTo(f.x, f.y);
+                ctx.arc(f.x, f.y, f.r, 0, Math.PI * 2);
+            }
+            ctx.fill();
+            moveFlakes();
+        }
+
+        function moveFlakes() {
+            for (let f of flakes) {
+                f.y += f.v;
+                f.x += f.w + 2; // Extra +2 for constant wind effect
+                if (f.y > canvas.height) {
+                    f.y = -10;
+                    f.x = Math.random() * canvas.width;
+                }
+                if (f.x > canvas.width) f.x = 0;
+            }
+        }
+
+        function loop() {
+            drawFlakes();
+            requestAnimationFrame(loop);
+        }
+
+        createFlakes();
+        loop();
+
+        window.onresize = () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        };
     </script>
 </body>
 </html>
